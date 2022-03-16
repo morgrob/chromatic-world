@@ -2,7 +2,7 @@
 	// Import the functions you need from the SDKs you need
 	import { initializeApp } from "firebase/app";
 	// import { getAnalytics } from "firebase/analytics";
-	import { getAuth, connectAuthEmulator, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, browserLocalPersistence, updateProfile } from "firebase/auth";
+	import { getAuth, connectAuthEmulator, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, browserLocalPersistence, updateProfile, onAuthStateChanged } from "firebase/auth";
 
 	// TODO: Add SDKs for Firebase products that you want to use
 	// https://firebase.google.com/docs/web/setup#available-libraries
@@ -67,11 +67,6 @@
     	},
 	];
 
-	// let user;
-	// $: isLoggedIn = !!user;
-
-	// let json = {email: '', username: '', password: ''};
-
 	let email = ''
 	let password = ''
 	let username = ''
@@ -80,29 +75,27 @@
 
 	const auth = getAuth(firebaseApp);
 
-	const user = auth.currentUser;
-	if (user !== null) {
-		// The user object has basic properties such as display name, email, etc.
-		const displayName = user.username;
-		const email = user.email;
-		logUser = user.username;
-
-		// The user's ID, unique to the Firebase project. Do NOT use
-		// this value to authenticate with your backend server, if
-		// you have one. Use User.getToken() instead.
-		const uid = user.uid;
-	}	
+	auth.onAuthStateChanged((user) => {
+		if (user != null) {
+			if (user.displayName != null) {
+				username = user.displayName
+			}
+			mode = 'loggedIn'
+		} else {
+			email = ''
+			password = ''
+			username = ''
+			mode = 'signIn'
+		}
+	})
 
 	const loginEmailPassword = async () => {
 		const loginEmail = email;
 		const loginPassword = password;
 
 		try {
-			const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-			mode = 'loggedIn';
+			await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
 			active = false;
-
-			username = userCredential.user.displayName
 		}
 		catch(error) {
 			console.log(error);
@@ -115,13 +108,10 @@
 
 		try {
 			const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
-			mode = 'loggedIn';
-			active = false;
 
-			const user = userCredential.user;
-			updateProfile(user, { displayName: username })
+			updateProfile(userCredential.user, { displayName: username })
 				.then(() => {
-					console.log("yay")
+					active = false;
 				})
 		} catch(error) {
 			console.log(error);
