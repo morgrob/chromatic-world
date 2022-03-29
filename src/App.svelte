@@ -2,7 +2,15 @@
 	// Import the functions you need from the SDKs you need
 	import { initializeApp } from "firebase/app";
 	// import { getAnalytics } from "firebase/analytics";
-	import { getAuth, connectAuthEmulator, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, browserLocalPersistence, updateProfile, onAuthStateChanged } from "firebase/auth";
+	import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
+
+	import { onMount, createEventDispatcher } from 'svelte';
+	// var randomWords = require('random-words')
+	import WordGrid from './components/WordGrid.svelte'
+	import Keyboard from './components/Keyboard.svelte'
+	import Snake from "./components/Snake.svelte"
+	import Breakout from "./components/Breakout.svelte"
+	import Slider from "./components/Slider.svelte"
 
 	// TODO: Add SDKs for Firebase products that you want to use
 	// https://firebase.google.com/docs/web/setup#available-libraries
@@ -20,10 +28,9 @@
 	});
 
 	import Headline from "./components/Headline.svelte";
-	import Games from "./components/Games.svelte";
 
-	import { Menu, List, ListItem, TextField, Icon, Button, Overlay, MaterialApp } from 'svelte-materialify';
-	import { mdiInvertColors, mdiAccountCircle, mdiLock, mdiEyeOff, mdiEye, mdiAt, mdiLogout } from '@mdi/js';
+	import { Menu, List, ListItem, TextField, Icon, Button, Overlay, MaterialApp, Card } from 'svelte-materialify';
+	import { mdiInvertColors, mdiAccountCircle, mdiLock, mdiEyeOff, mdiEye, mdiAt, mdiLogout, mdiClose, mdiReplay } from '@mdi/js';
 
 	let theme = 'dark';
 
@@ -60,7 +67,7 @@
 
 	const createUserRules = [
 		(v) => !!v || 'Required',
-    	(v) => v.length >= 3 || 'Minimum 3 characters.',
+    	(v) => v.length <= 25 || 'Max 25 characters.',
     	(v) => {
 			const pattern = /^[a-zA-Z\-]+$/
       		return pattern.test(v) || 'Invalid username.';
@@ -93,28 +100,63 @@
 		const loginEmail = email;
 		const loginPassword = password;
 
-		try {
-			await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-			active = false;
+		const satisfiesEmailRules = emailRules.map(rule => rule(email)).every(result => result === true)
+		const satisfiesPassRules = logPassRules.map(rule => rule(password)).every(result => result === true)
+		
+		if (!satisfiesEmailRules) {
+			hasEmailError = true
 		}
-		catch(error) {
-			console.log(error);
+		if (!satisfiesPassRules) {
+			hasPasswordError = true
+		}
+
+		if (satisfiesEmailRules === true && satisfiesPassRules === true) {
+			try {
+				await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+				active = false;
+			}
+			catch(error) {
+				console.log(error);
+			}
 		}
 	}
+
+	// let createFieldClass = "pink-text text-accent-1";
+	var hasEmailError = false
+	var hasUsernameError = false
+	var hasPasswordError = false
 
 	const createEmailPassword = async () => {
 		const loginEmail = email;
 		const loginPassword = password;
 
-		try {
-			const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
+		const satisfiesEmailRules = emailRules.map(rule => rule(email)).every(result => result === true)
+		const satisfiesPassRules = createPassRules.map(rule => rule(password)).every(result => result === true)
+		const satisfiesUsernameRules = createUserRules.map(rule => rule(username)).every(result => result === true)
 
-			updateProfile(userCredential.user, { displayName: username })
-				.then(() => {
-					active = false;
-				})
-		} catch(error) {
-			console.log(error);
+		if (!satisfiesEmailRules) {
+			hasEmailError = true
+		}
+
+		if (!satisfiesUsernameRules) {
+			hasUsernameError = true
+		}
+
+		if (!satisfiesPassRules) {
+			hasPasswordError = true
+		}
+
+		if (satisfiesEmailRules === true && satisfiesUsernameRules === true && satisfiesPassRules === true ) {
+			try {
+				const userCredential = await createUserWithEmailAndPassword(auth, loginEmail, loginPassword);
+
+				updateProfile(userCredential.user, { displayName: username })
+					.then(() => {
+						active = false;
+					})
+			} catch(error) {
+				console.log(error);
+			}
 		}
 	}
 
@@ -131,6 +173,102 @@
 		}
 	}
 
+	let overlayMode = null;
+
+	const setOverlayMode = (mode) => {
+		active = mode !== null;
+		overlayMode = mode;
+	}
+
+	/////////////////////////////////////////////////////// START SWORDLE CODE HERE ///////////////////////////////////////////////////////
+
+	let word = ""
+	let state = 0 // number of swordle guesses so far
+	let tries = 7
+	let results = [] // 
+	let guesses = makeGuesses();
+	let guessColors = makeGuessColors();
+
+	window["keypress"] = []
+	window["keycolor"] = []
+	let message = ""
+
+	function makeGuessColors() {
+		let result = [];
+
+		for (let i = 0; i < 7; i++) {
+			let array = Array(6).fill("waiting")
+			result.push(array)
+		}
+
+		return result
+	}
+
+	function makeGuesses() {
+		let result = Array(7).fill("")
+		return result
+	}
+
+	function handleMessage(event){
+		if(event.detail.message != undefined){
+			message = event.detail.message
+			setTimeout(() => {
+				message = ""
+			}, 1000)
+			if (message != "That's not a word!") {
+				state--;
+			}
+		} else{
+			let x = event.detail.state
+			results.push(x)
+			if(x == "correct"){
+				state = "win"
+			} 
+			else if(x == "incorrect"){
+				if(state + 1 >= tries){
+					state = "lose"
+				} else{
+					state++
+				}
+			}
+		}
+	}
+	function handleKeyclick(event){
+		console.log(event.detail.key)
+		return {key: event.detail.key}
+	}
+	function getState(i) {
+		if (i == state) {
+			return "typing"
+		} else if (i > state) {
+			return "waiting"
+		} else {
+			return results[i]
+		}
+	}
+
+	var randomWord = ['abroad', 'across', 'breeze', 'energy', 'motion']
+
+	onMount(() => {
+		if(word == ""){
+			word = randomWord[Math.floor(Math.random()*randomWord.length)]
+			console.log(word)
+			tries = 7
+			state = 0
+			results = []
+		}
+	})
+
+	function refreshSwordle() {
+		word = randomWord[Math.floor(Math.random()*randomWord.length)]
+		console.log(word)
+		tries = 7
+		state = 0
+		results = []
+		guesses = makeGuesses();
+		guessColors = makeGuessColors();
+	}
+
 </script>
 
 	<MaterialApp theme="{theme}">
@@ -142,36 +280,52 @@
 				<div class="nav-buttons">
 					{#if mode === 'loggedIn'}
 						<Menu hover>
-							<div slot="activator" style="margin-top: 8px;" class="black-text">
+							<div slot="activator" style="margin-top: 8px;" class="grey-text text-darken-2">
 								<!-- <Button class="pink accent-1" style="margin-top: 12px;"> -->
-									<Icon path={mdiAccountCircle} style="margin-right: 5px;" class="black-text"/>
+									<Icon path={mdiAccountCircle} style="margin-right: 5px;" class="grey-text text-darken-2"/>
 									{username}
 								<!-- </Button> -->
 							</div>
+
 							<List style="padding: 0;">
-								<ListItem on:click="{logoutEmailPassword}" style="height: 55px;">
+								<ListItem on:click="{logoutEmailPassword}" style="height: 50px; padding: 10px;">
 									<Icon path={mdiLogout}/>
 									Log out
 								</ListItem>
 							</List>
 					  	</Menu>
 					{:else}
-						<Button rounded class="button deep-purple accent-1 white-text" id="login" on:click={() => {active = true;}} style="margin-top: 2px; padding: 18px 20px">Log in</Button>
+						<Button rounded class="button deep-purple accent-1 white-text" id="login" on:click={() => { setOverlayMode('form') }} style="margin-top: 2px; padding: 18px 20px">Log in</Button>
 					{/if}
-					
-					<!-- <Button fab size="small" on:click="{toggleTheme}" style="margin-left: 20px;">
-						<Icon path={mdiInvertColors}/>
-					</Button> -->
 				</div>
+				<Button fab size="small" on:click="{toggleTheme}" style="position: fixed; bottom: 20px; right: 20px;">
+					<Icon path={mdiInvertColors}/>
+				</Button>
 			</header>
 
-			<Headline/>
+			<div class="main-container">
 
-			<Button fab size="small" on:click="{toggleTheme}" style="position: fixed; bottom: 20px; right: 20px;">
-				<Icon path={mdiInvertColors}/>
-			</Button>
+				<Headline/>
 
-			<Games/>
+				<div class="game-container">
+					<div class="row row-1">
+						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">TETRIS</Button>
+						<Button rounded class="game dinosaur" on:click={() => { setOverlayMode('dinosaur') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">DINOSAUR GAME</Button>
+					</div>
+					<div class="row row-2">
+						<Button rounded class="game swordle deep-purple accent-1" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">SWORDLE</Button>
+						<Button rounded class="game snake pink accent-1" on:click={() => { setOverlayMode('snake') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">HUNGRY SNAKE</Button>
+						<Button rounded class="game nonograms" on:click={() => { setOverlayMode('nonograms') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">NONOGRAMS</Button>
+					</div>
+					<div class="row row-3">
+						<Button rounded class="blue lighten-2 game twenty" on:click={() => { setOverlayMode('twenty') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">2048</Button>
+						<Button rounded class="green lighten-2 game breakout" on:click={() => { setOverlayMode('breakout') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BREAKOUT</Button>
+					</div>
+				</div>
+
+			</div>
+
+			
 
 			<footer>
 				<p id="main">Made with <b>&hearts;</b> by Morgan Roberts &copy; 2022</p>
@@ -182,72 +336,189 @@
 				</div>
 			</footer>
 
-			<Overlay opacity={0.98} {active}>
-				<!-- <form class="login-container" on:submit|preventDefault={handleSubmit}> -->
-				<form class="login-container" on:submit|preventDefault={loginEmailPassword}>
-					{#if mode === 'signIn'}
-					<h4>Welcome back!</h4>
-					<p class="error">error message</p>
-						<TextField class="deep-purple-text text-accent-1" rules={emailRules} bind:value={email}>
-							<div slot="prepend-outer">
-							<Icon path={mdiAt} />
-							</div>
-							Email
-						</TextField>
-						<br/>
-						<!-- <TextField class="deep-purple-text text-accent-1" bind:value={username}>
-							<div slot="prepend-outer">
-							<Icon path={mdiAccountCircle} />
-							</div>
-							Username
-						</TextField>
-						<br/> -->
-						<TextField type={show ? 'text' : 'password'} class="deep-purple-text text-accent-1" bind:value={password} rules={logPassRules}>
-							<div slot="prepend-outer">
-							<Icon path={mdiLock} />
-							</div>
-							Password
-							<div slot="append" on:click={() => {show = !show;}}>
-								<Icon path={show ? mdiEyeOff : mdiEye} />
-							</div>
-						</TextField>
-						<br/>
-						<Button on:click={loginEmailPassword} block class="deep-purple accent-1">Log in</Button>
-					{:else}
-					<h4>Welcome!</h4>
-						<TextField class="pink-text text-accent-1" rules={emailRules} bind:value={email}>
-							<div slot="prepend-outer">
-							<Icon path={mdiAt} />
-							</div>
-							Email
-						</TextField>
-						<br/>
-						<TextField class="pink-text text-accent-1" rules={createUserRules} bind:value={username}>
-							<div slot="prepend-outer">
-							<Icon path={mdiAccountCircle} />
-							</div>
-							Username
-						</TextField>
-						<br/>
-						<TextField type={show ? 'text' : 'password'} class="pink-text text-accent-1" rules={createPassRules} bind:value={password}>
-							<div slot="prepend-outer">
-							<Icon path={mdiLock} />
-							</div>
-							Password
-							<div slot="append" on:click={() => {show = !show;}}>
-								<Icon path={show ? mdiEyeOff : mdiEye} />
-							</div>
-						</TextField>
-						<br/>
-						<Button on:click={createEmailPassword} block class="pink accent-1">Create Account</Button>
-					{/if}
-					<Button block on:click={() => {active = false;}}>Cancel</Button>
-					{#if mode === 'signIn'}
-						<p style="text-align: center;">Don't have an account? <b class="deep-purple-text text-accent-1" on:click={() => (mode = 'signUp')}>Create one.</b></p>
-					{:else}
-						<p style="text-align: center;">Already have an account? <b class="pink-text text-accent-1" on:click={() => (mode = 'signIn')}>Log in.</b></p>
-					{/if}
-				</form>
+			
+			<Overlay opacity={1} {active} color={theme === 'dark' ? 'grey darken-4' : 'grey lighten-3'}>
+
+				{#if overlayMode === 'form'}
+
+					<form id="login-container" on:submit|preventDefault={loginEmailPassword}>
+						{#if mode === 'signIn'}
+							<h4 id="login-head">Welcome back!</h4>
+
+							{#if hasEmailError || hasPasswordError}
+								<p class="red-text" style="margin-bottom: 20px; margin-top: -20px;">Login failed.</p>
+							{/if}
+
+							<TextField class="deep-purple-text text-accent-1" rules={emailRules} bind:value={email}>
+								<div slot="prepend-outer">
+								<Icon path={mdiAt} />
+								</div>
+								Email
+							</TextField>
+
+							<br/>
+							
+							<TextField type={show ? 'text' : 'password'} class="deep-purple-text text-accent-1" bind:value={password} rules={logPassRules}>
+								<div slot="prepend-outer">
+								<Icon path={mdiLock} />
+								</div>
+								Password
+								<div slot="append" on:click={() => {show = !show;}}>
+									<Icon path={show ? mdiEyeOff : mdiEye} />
+								</div>
+							</TextField>
+
+							<br/>
+							
+							<Button on:click={loginEmailPassword} block class="deep-purple accent-1">Log in</Button>
+						{:else}
+							<h4>Welcome!</h4>
+							{#if hasEmailError || hasUsernameError || hasPasswordError}
+								<p class="red-text" style="margin-bottom: 20px; margin-top: -20px;">Account creation failed.</p>
+							{/if}
+							<TextField class="pink-text text-accent-1" rules={emailRules} bind:value={email}>
+								<div slot="prepend-outer">
+								<Icon path={mdiAt} />
+								</div>
+								Email
+							</TextField>
+
+							<br/>
+
+							<TextField class="pink-text text-accent-1" rules={createUserRules} bind:value={username}>
+								<div slot="prepend-outer">
+								<Icon path={mdiAccountCircle} />
+								</div>
+								Username
+							</TextField>
+
+							<br/>
+
+							<TextField type={show ? 'text' : 'password'} class="pink-text text-accent-1" rules={createPassRules} bind:value={password}>
+								<div slot="prepend-outer">
+								<Icon path={mdiLock} />
+								</div>
+								Password
+								<div slot="append" on:click={() => {show = !show;}}>
+									<Icon path={show ? mdiEyeOff : mdiEye} />
+								</div>
+							</TextField>
+							<br/>
+							<Button on:click={createEmailPassword} block class="pink accent-1">Create Account</Button>
+						{/if}
+						<Button block on:click={() => { setOverlayMode(null) }}>Cancel</Button>
+						{#if mode === 'signIn'}
+							<p style="text-align: center;">Don't have an account? <b class="deep-purple-text text-accent-1" on:click={() => (mode = 'signUp')}>Create one.</b></p>
+						{:else}
+							<p style="text-align: center;">Already have an account? <b class="pink-text text-accent-1" on:click={() => (mode = 'signIn')}>Log in.</b></p>
+						{/if}
+					</form>
+
+				{:else if overlayMode === "tetris"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<Card style="background-color: #323232; padding: 10px; width: 650px;">
+						tetris here
+					</Card>
+
+				{:else if overlayMode === "dinosaur"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<Card style="background-color: #323232; padding: 10px; width: 650px;">
+						dinosaur game here
+					</Card>
+				
+				{:else if overlayMode === "swordle"}
+
+						<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2" style="margin-top: 50px;">
+							<Icon path={mdiClose} style="margin-right: 5px;" /> close
+						</Button>
+
+						<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="deep-purple-text text-accent-1">SWORDLE</h3>
+					
+						<div class="message" style="display: flex; justify-content: space-between;">
+							{#if message != ""}
+								<strong>{message}</strong>
+							{/if}
+
+							{#if state == "win"}
+								<strong>You won! 🎉</strong>
+								<Button class="deep-purple darken-3" on:click={refreshSwordle}>
+									<Icon path={mdiReplay} style="margin-right: 5px;" />
+									Play Again
+								</Button>
+							{/if}
+
+							{#if state == "lose"}
+								<strong>You lost! 🥴</strong>
+								<p>The word was {word}.</p>
+								<Button class="deep-purple darken-3" on:click={state = 0}>
+									<Icon path={mdiReplay} style="margin-right: 5px;" />
+									Play Again
+								</Button>
+							{/if}
+						</div>
+						<br>
+						<table>
+							{#each {length: tries} as _, i}
+								<WordGrid state={getState(i, state)} correct={word} word={guesses[i]} colors={guessColors[i]} on:message={handleMessage}/>
+							{/each}
+						</table>
+
+						<Keyboard on:keyclick={handleKeyclick} />
+
+				{:else if overlayMode === "snake"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="pink-text text-accent-1">HUNGRY SNAKE</h3>
+
+					<Card style="background-color: #323232; padding: 10px;">
+						<Snake/>
+					</Card>
+
+				{:else if overlayMode === "nonograms"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #f3d161">SLIDER PUZZLE</h3>
+
+					<Slider/>
+
+				{:else if overlayMode === "twenty"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<Card style="background-color: #323232; padding: 10px; width: 650px;">
+						2048 here
+					</Card>
+
+				{:else if overlayMode === "breakout"}
+
+					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
+						<Icon path={mdiClose} style="margin-right: 5px;" /> close
+					</Button>
+
+					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="green-text text-lighten-2">BREAKOUT</h3>
+
+					<Card style="background-color: #323232; padding: 10px; width: 650px;">
+						<Breakout/>
+					</Card>
+
+				{/if}
+
 			</Overlay>
 
 		</div>
@@ -255,22 +526,31 @@
 	</MaterialApp>
 
 <style>
-	.error {
-		display: none;
-	}
 	.container {
 		height: auto;
-		background-image: url("/assets/rainbow-bg.png");
+		/* width: 100vw; */
+		background-image: url("/assets/rainbow-background.svg");
 		background-size: contain;
 		background-repeat: no-repeat;
+	}
+	.main-container {
+		display: flex;
+		justify-content: space-between;
 	}
 	b:hover {
 		cursor: pointer;
 		text-decoration: underline;
 	}
-	.login-container {
+	#login-container {
 		width: 400px;
 	}
+	/* #tetris-container {
+		height: 80vh;
+		width: 550px;
+		border-radius: 10px;
+		margin-bottom: 80%;
+	} */
+
 	h4 {
 		margin: 30px 0;
 		font-size: 20pt;
@@ -296,6 +576,7 @@
     .nav-buttons {
         padding: 12.5px;
         display: flex;
+		min-width: 130px;
 		/* width: auto; */
         /* justify-content: space-between; */
     }
@@ -316,4 +597,60 @@
     .links {
         text-align: center;
     }
+	.game-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+		margin-right: 3%;
+    }
+    .row {
+        display: flex;
+        justify-content: center;
+    }
+    /* .game {
+        height: 225px;
+        width: 225px;
+        background-color: gray;
+        margin: 0 10px;
+        border-radius: 100em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        font-size: 26px;
+		box-shadow: rgba(0, 0, 0, 0.3) 0px 3px 8px;
+		transition: 0.2s ease-in-out;
+    }
+    .tetris {
+        background-color: #FF4E4E;
+        color: #fc9f9f;
+    }
+    .wildwest {
+        background-color: #FF9452;
+        color: #fdc29c;
+    }
+    .nonograms {
+        background-color: #f3d161;
+        color: #fff4d1;
+    }
+    .twenty {
+        background-color: #7eabff;
+        color: #c8dbff;
+    }
+    .breakout {
+        background-color: #77da5f;
+        color: #dffdd8;
+    }
+    .game:hover {
+        text-decoration: none;
+        transform: scale(1.1);
+		cursor: pointer;
+    } */
+
+	
+	.message *{
+		margin-right: 10px;
+		display: inline;
+	}
 </style>

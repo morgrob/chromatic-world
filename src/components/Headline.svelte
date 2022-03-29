@@ -6,28 +6,40 @@
 
 <div class="headline">
     <div class="headline-img">
-        <img src="assets/chromatic-header.png" alt="chromatic.world expanded logo">
-        <h1 id="world">.world</h1>
+        <h1><b>chromatic</b>.world</h1>
     </div>
-    <h1>Let the games begin.</h1>
-    <Button rounded class="deep-purple accent-1 white-text" size="x-large" style="width: 200px; font-size: 14pt;">PLAY NOW</Button>
+    <h2>Let the games begin.</h2>
+    <!-- <Button rounded class="deep-purple accent-1 white-text" size="x-large" style="width: 200px; font-size: 14pt;">PLAY NOW</Button> -->
 </div>
 
-<style>
-    .headline-img {
+<style>    
+    /* .headline-img {
         display: flex;
-    }
-    #world {
+    } */
+    /* #world {
         font-size: 62pt;
         transform: translateY(13px);
     }
     img {
         width: 25em;
         height: auto;
-    }
+    } */
     h1 {
-        font-size: 2.5em;
-
+        font-size: 4em;
+    }
+    b {
+        font-size: 1.8em;
+        padding: 10px;
+        font-family: learning-curve, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: -webkit-linear-gradient(left, #DF5353, #E69256, #E9D069, #98C586, #81B3F3, #A687FC, #E37FA8);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    h2 {
+        font-size: 2em;
     }
     /* .button {
         width: 190px;
