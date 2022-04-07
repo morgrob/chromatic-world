@@ -12,6 +12,14 @@
 	import Breakout from "./components/Breakout.svelte"
 	import Slider from "./components/Slider.svelte"
 
+	import BSGrid from "./components/BSGrid.svelte";
+    import BSShipSelect from "./components/BSShipSelect.svelte";
+    import BSPlacementOption from "./components/BSPlacementOption.svelte";
+    import BSOrientationBtn from "./components/BSOrientationBtn.svelte";
+    import BSMessages from "./components/BSMessages.svelte";
+    import BSStartNew from "./components/BSStartNew.svelte";
+    import BSWonLost from "./components/BSWonLost.svelte";
+
 	// TODO: Add SDKs for Firebase products that you want to use
 	// https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -269,6 +277,104 @@
 		guessColors = makeGuessColors();
 	}
 
+	/////////////////////////////////////////////////////// START BATTLESHIP CODE HERE ///////////////////////////////////////////////////////
+
+	let conditions = ["placement", "game"];
+    let condition = conditions[0];
+    let activePlayer = 'player';
+    // prettier-ignore
+    let playerShips = [
+        { type: "carrier",    size: 5, hits: [], pos: [] },
+        { type: "battleship", size: 4, hits: [], pos: [] },
+        { type: "cruiser",    size: 3, hits: [], pos: [] },
+        { type: "submarine",  size: 3, hits: [], pos: [] },
+        { type: "destroyer",  size: 2, hits: [], pos: [] },
+    ];
+    let opponentShips = [
+        { type: "carrier",    size: 5, hits: [], pos: [] },
+        { type: "battleship", size: 4, hits: [], pos: [] },
+        { type: "cruiser",    size: 3, hits: [], pos: [] },
+        { type: "submarine",  size: 3, hits: [], pos: [] },
+        { type: "destroyer",  size: 2, hits: [], pos: [] },
+    ];
+    let playerGuesses = {hits: [], misses: []};
+    let opponentGuesses = {hits: [], misses: []};
+    let opponentPossibleGuesses = [];
+    createGuesses();
+    function createGuesses() {
+        for (let y = 0; y < 10; y++) {
+            for (let x = 0; x < 10; x++) {
+                opponentPossibleGuesses = [...opponentPossibleGuesses, `${x}${y}`];
+            }
+        }
+    }
+    $: numOfShipsPlaced = playerShips.filter(s => s.pos.length > 1).length;
+    let selectedShip = null;
+    let orientation = "horizontal";
+    let hasOverlap = false;
+    let playerGridEl;
+    let opponentGridEl;
+    let messagesEl;
+    function reset() {
+        condition = conditions[0]
+        playerShips = [
+            { type: "carrier",    size: 5, hits: [], pos: [] },
+            { type: "battleship", size: 4, hits: [], pos: [] },
+            { type: "cruiser",    size: 3, hits: [], pos: [] },
+            { type: "submarine",  size: 3, hits: [], pos: [] },
+            { type: "destroyer",  size: 2, hits: [], pos: [] },
+        ];
+        opponentShips = [
+            { type: "carrier",    size: 5, hits: [], pos: [] },
+            { type: "battleship", size: 4, hits: [], pos: [] },
+            { type: "cruiser",    size: 3, hits: [], pos: [] },
+            { type: "submarine",  size: 3, hits: [], pos: [] },
+            { type: "destroyer",  size: 2, hits: [], pos: [] },
+        ];
+        playerGuesses = {hits: [], misses: []}
+        opponentGuesses = {hits: [], misses: []}
+    }
+    function clearShips() {
+        playerShips = playerShips.map(s => {
+            return {...s, pos: []}
+        })
+    }
+    $: canStartGame = numOfShipsPlaced == 5 && condition == "placement" ? true : false;
+    function handleStart() {
+        if (canStartGame) {
+            condition = conditions[1]
+            opponentGridEl.placeRandom();
+        }
+        messagesEl.startGameMsg(canStartGame);
+    }
+    $: winner = () => {
+        if (playerShips.map(s => s.hits).flat().length == 17) {
+            return 'opponent'
+        } else if (opponentShips.map(s => s.hits).flat().length == 17) {
+            return 'player'
+        }
+    }
+    function opponentTurn() {
+        let randIndex = Math.floor(Math.random() *
+            opponentPossibleGuesses.length);
+        let randPos = opponentPossibleGuesses.splice(randIndex, 1)[0];
+        let hit = false;
+        playerShips.forEach((s, i) => {
+            if (s.pos.includes(randPos)) {
+                playerShips[i] = {...s, hits:[...s.hits, randPos]};
+                hit = true;
+            }
+        })
+        if (!hit ) opponentGuesses = {...opponentGuesses,
+            misses:[...opponentGuesses.misses, randPos] };
+        activePlayer = "player";
+    }
+    $: if (activePlayer == 'opponent') setTimeout(() => opponentTurn(), 1000)
+    function handleTurn(e) {
+        playerGuesses = e.guesses;
+        activePlayer = e.activePlayer;
+    }
+
 </script>
 
 	<MaterialApp theme="{theme}">
@@ -298,9 +404,13 @@
 						<Button rounded class="button deep-purple accent-1 white-text" id="login" on:click={() => { setOverlayMode('form') }} style="margin-top: 2px; padding: 18px 20px">Log in</Button>
 					{/if}
 				</div>
-				<Button fab size="small" on:click="{toggleTheme}" style="position: fixed; bottom: 20px; right: 20px;">
-					<Icon path={mdiInvertColors}/>
-				</Button>
+				<div class="footer-items" style="position: fixed; bottom: 20px; right: 20px;">
+					<p id="main" style="margin: 10px 25px;">Made with <b>&hearts;</b> by Morgan Roberts &copy; 2022</p>
+					<Button fab size="small" on:click="{toggleTheme}">
+						<Icon path={mdiInvertColors}/>
+					</Button>
+				</div>
+				
 			</header>
 
 			<div class="main-container">
@@ -310,15 +420,15 @@
 				<div class="game-container">
 					<div class="row row-1">
 						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">TETRIS</Button>
-						<Button rounded class="game dinosaur" on:click={() => { setOverlayMode('dinosaur') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">DINOSAUR GAME</Button>
+						<Button rounded class="game twenty" on:click={() => { setOverlayMode('twenty') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">2048</Button>
 					</div>
 					<div class="row row-2">
 						<Button rounded class="game swordle deep-purple accent-1" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">SWORDLE</Button>
 						<Button rounded class="game snake pink accent-1" on:click={() => { setOverlayMode('snake') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">HUNGRY SNAKE</Button>
-						<Button rounded class="game nonograms" on:click={() => { setOverlayMode('nonograms') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">NONOGRAMS</Button>
+						<Button rounded class="game nonograms" on:click={() => { setOverlayMode('nonograms') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">SLIDER PUZZLE</Button>
 					</div>
 					<div class="row row-3">
-						<Button rounded class="blue lighten-2 game twenty" on:click={() => { setOverlayMode('twenty') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">2048</Button>
+						<Button rounded class="blue lighten-2 game battle" on:click={() => { setOverlayMode('battle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BATTLESHIP</Button>
 						<Button rounded class="green lighten-2 game breakout" on:click={() => { setOverlayMode('breakout') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BREAKOUT</Button>
 					</div>
 				</div>
@@ -327,14 +437,14 @@
 
 			
 
-			<footer>
+			<!-- <footer>
 				<p id="main">Made with <b>&hearts;</b> by Morgan Roberts &copy; 2022</p>
 				<div class="links">
 					<a href="/">About</a>
 					<a href="/">Privacy Policy</a>
 					<a href="/">Help</a>
 				</div>
-			</footer>
+			</footer> -->
 
 			
 			<Overlay opacity={1} {active} color={theme === 'dark' ? 'grey darken-4' : 'grey lighten-3'}>
@@ -424,7 +534,7 @@
 						tetris here
 					</Card>
 
-				{:else if overlayMode === "dinosaur"}
+				{:else if overlayMode === "twenty"}
 
 					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
@@ -481,9 +591,7 @@
 
 					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="pink-text text-accent-1">HUNGRY SNAKE</h3>
 
-					<Card style="background-color: #323232; padding: 10px;">
-						<Snake/>
-					</Card>
+					<Snake/>
 
 				{:else if overlayMode === "nonograms"}
 
@@ -495,15 +603,49 @@
 
 					<Slider/>
 
-				{:else if overlayMode === "twenty"}
+				{:else if overlayMode === "battle"}
 
 					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<Card style="background-color: #323232; padding: 10px; width: 650px;">
-						2048 here
-					</Card>
+					<h3 class="blue-text text-lighten-2" style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">BATTLESHIP</h3>
+
+					<div id="game-container">
+						<BSGrid
+							ref={condition == "placement" ? 'grid-1' : 'grid-2'}
+							bind:this={playerGridEl}
+							bind:selectedShip {orientation}
+							bind:hasOverlap bind:ships={playerShips}
+							guesses={opponentGuesses}
+							{condition}
+						/>
+					
+						<div id="ship-placement" class:disable={condition == 'game'}>
+							<BSShipSelect bind:ships={playerShips} bind:selectedShip />
+							<hr>
+							<BSPlacementOption on:clear={() => clearShips()} on:random={() =>
+								playerGridEl.placeRandom()} {condition}></BSPlacementOption>
+							<hr>
+							<BSOrientationBtn bind:orientation />
+						</div>
+					
+						<BSGrid ref={condition == "placement" ? 'grid-2' : 'grid-1'}
+							bind:this={opponentGridEl} bind:ships={opponentShips} {condition}
+							hideShips={true} on:turn={(e) => handleTurn(e.detail)}
+							guesses={playerGuesses}
+							{activePlayer}
+						/>
+					
+						<!-- <BSMessages ref="messages" bind:this={messagesEl} {hasOverlap} {numOfShipsPlaced} {condition}/> -->
+					
+						<BSStartNew ref="startNew" on:start={() => handleStart()} on:newGame={() =>
+							reset()} {canStartGame} {condition} ></BSStartNew>
+					
+						{#if winner()}
+							<BSWonLost ref="grid-1" {winner}></BSWonLost>
+						{/if}
+					</div>
 
 				{:else if overlayMode === "breakout"}
 
@@ -532,6 +674,9 @@
 		background-image: url("/assets/rainbow-background.svg");
 		background-size: contain;
 		background-repeat: no-repeat;
+	}
+	.footer-items {
+		display: flex;
 	}
 	.main-container {
 		display: flex;
@@ -580,23 +725,16 @@
 		/* width: auto; */
         /* justify-content: space-between; */
     }
-	footer {
-        padding: 30px;
-    }
+	
     #main {
         /* color: white; */
-        font-size: 14pt;
+        font-size: 10pt;
         text-align: center;
     }
     b {
         color: #FF4E4E;
     }
-    .links a {
-        padding: 0 15px;
-    }
-    .links {
-        text-align: center;
-    }
+    
 	.game-container {
         display: flex;
         flex-direction: column;
@@ -607,6 +745,43 @@
     .row {
         display: flex;
         justify-content: center;
+    }
+	
+    #game-container {
+        width: 850px;
+        height: 640px;
+        margin: auto;
+        display: grid;
+        grid-gap: 30px;
+        grid-template-columns: repeat(11, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        grid-template-areas:
+            "a a a a a a a a b b b"
+            "a a a a a a a a b b b"
+            "a a a a a a a a b b b"
+            "a a a a a a a a b b b"
+            "a a a a a a a a e e e"
+            "a a a a a a a a d d d"
+            "a a a a a a a a d d d"
+            "a a a a a a a a d d d"
+    }
+    :global([ref=grid-1]) {
+        grid-area: a;
+    }
+    :global([ref=grid-2]) {
+        grid-area: d;
+    }
+    #ship-placement {
+        grid-area: b;
+    }
+    :global([ref=messages]) {
+        grid-area: c;
+    }
+    :global([ref=startNew]) {
+        grid-area: e;
+    }
+    .disable {
+        pointer-events: none;
     }
     /* .game {
         height: 225px;
