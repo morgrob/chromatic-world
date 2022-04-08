@@ -6,17 +6,17 @@
 
 	import { onMount, createEventDispatcher } from 'svelte';
 	// var randomWords = require('random-words')
-	import WordGrid from './components/WordGrid.svelte'
-	import Keyboard from './components/Keyboard.svelte'
-	import Snake from "./components/Snake.svelte"
-	import Breakout from "./components/Breakout.svelte"
-	import Slider from "./components/Slider.svelte"
+	import WordGrid from './components/WordGrid.svelte';
+	import Keyboard from './components/Keyboard.svelte';
+	import Snake from "./components/Snake.svelte";
+	import Breakout from "./components/Breakout.svelte";
+	import Slider from "./components/Slider.svelte";
+	import FlappyBird from "./components/FlappyBird.svelte";
 
 	import BSGrid from "./components/BSGrid.svelte";
     import BSShipSelect from "./components/BSShipSelect.svelte";
     import BSPlacementOption from "./components/BSPlacementOption.svelte";
     import BSOrientationBtn from "./components/BSOrientationBtn.svelte";
-    import BSMessages from "./components/BSMessages.svelte";
     import BSStartNew from "./components/BSStartNew.svelte";
     import BSWonLost from "./components/BSWonLost.svelte";
 
@@ -420,12 +420,12 @@
 				<div class="game-container">
 					<div class="row row-1">
 						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">TETRIS</Button>
-						<Button rounded class="game twenty" on:click={() => { setOverlayMode('twenty') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">2048</Button>
+						<Button rounded class="game flappy" on:click={() => { setOverlayMode('flappy') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">Flappy Duck</Button>
 					</div>
 					<div class="row row-2">
-						<Button rounded class="game swordle deep-purple accent-1" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">SWORDLE</Button>
+						<Button rounded class="game swordle deep-purple accent-1" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">Wordle6</Button>
 						<Button rounded class="game snake pink accent-1" on:click={() => { setOverlayMode('snake') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">HUNGRY SNAKE</Button>
-						<Button rounded class="game nonograms" on:click={() => { setOverlayMode('nonograms') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">SLIDER PUZZLE</Button>
+						<Button rounded class="game slider" on:click={() => { setOverlayMode('slider') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">SLIDER PUZZLE</Button>
 					</div>
 					<div class="row row-3">
 						<Button rounded class="blue lighten-2 game battle" on:click={() => { setOverlayMode('battle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BATTLESHIP</Button>
@@ -534,15 +534,17 @@
 						tetris here
 					</Card>
 
-				{:else if overlayMode === "twenty"}
+				{:else if overlayMode === "flappy"}
 
 					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<Card style="background-color: #323232; padding: 10px; width: 650px;">
-						dinosaur game here
-					</Card>
+					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #FF9452;">FLAPPY DUCK</h3>
+
+					<div class="flappy-container">
+						<FlappyBird/>
+					</div>
 				
 				{:else if overlayMode === "swordle"}
 
@@ -550,7 +552,7 @@
 							<Icon path={mdiClose} style="margin-right: 5px;" /> close
 						</Button>
 
-						<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="deep-purple-text text-accent-1">SWORDLE</h3>
+						<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="deep-purple-text text-accent-1">WORDLE6</h3>
 					
 						<div class="message" style="display: flex; justify-content: space-between;">
 							{#if message != ""}
@@ -593,7 +595,7 @@
 
 					<Snake/>
 
-				{:else if overlayMode === "nonograms"}
+				{:else if overlayMode === "slider"}
 
 					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
