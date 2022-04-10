@@ -1,6 +1,9 @@
 <script>
     import { shuffle } from 'lodash-es'
     import { flip } from 'svelte/animate'
+    import { Button } from 'svelte-materialify';
+
+    let sliderScore = 0;
 
     let solution = '123456780'
     let tiles = getShuffledTiles()
@@ -51,6 +54,7 @@
             tiles[emptyCell] = tile
             tiles[tileCell] = 0
             tiles = [...tiles]
+            sliderScore = sliderScore + 1;
         }
     }
 
@@ -74,11 +78,13 @@
         shouldAnimate = false
         tiles = getShuffledTiles()
     }
+
 </script>
 
 <svelte:window on:keydown={moveOnKeyDown}/>
 
 <section>
+    <p><b>Moves: {sliderScore}</b></p>
     <div class="puzzle">
         {#each tiles as tile, index (tile)}
             <div class="tile"
@@ -90,8 +96,7 @@
     </div>
 
     {#if solved}
-        <p>Solved!</p>
-        <button on:click={playAgain}>Play again</button>
+        <Button on:click={playAgain} style="margin: 25px;">Play again</Button>
     {/if}
 </section>
 
@@ -102,6 +107,10 @@
         flex-direction: column;
     }
 
+    p, b {
+        text-align: right !important;
+        width: 100%;
+    }
     .puzzle {
         display: grid;
         grid-gap: 5px;
@@ -110,9 +119,8 @@
         width: 450px;
         height: 450px;
         padding: 5px;
-        border: 1px solid rgb(85, 85, 85);
         border-radius: 10px;
-        background: rgb(68, 68, 68);
+        background: #f3d16175;
     }
 
     .tile {

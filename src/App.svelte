@@ -12,6 +12,8 @@
 	import Breakout from "./components/Breakout.svelte";
 	import Slider from "./components/Slider.svelte";
 	import FlappyBird from "./components/FlappyBird.svelte";
+	import MathWhiz from "./components/MathWhiz.svelte";
+	import Leaderboard from "./components/Leaderboard.svelte";
 
 	import BSGrid from "./components/BSGrid.svelte";
     import BSShipSelect from "./components/BSShipSelect.svelte";
@@ -40,7 +42,7 @@
 	import { Menu, List, ListItem, TextField, Icon, Button, Overlay, MaterialApp, Card } from 'svelte-materialify';
 	import { mdiInvertColors, mdiAccountCircle, mdiLock, mdiEyeOff, mdiEye, mdiAt, mdiLogout, mdiClose, mdiReplay } from '@mdi/js';
 
-	let theme = 'dark';
+	export let theme = 'dark';
 
     let active = false;
 
@@ -419,7 +421,7 @@
 
 				<div class="game-container">
 					<div class="row row-1">
-						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">TETRIS</Button>
+						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">MATH WHIZ</Button>
 						<Button rounded class="game flappy" on:click={() => { setOverlayMode('flappy') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">Flappy Duck</Button>
 					</div>
 					<div class="row row-2">
@@ -447,7 +449,7 @@
 			</footer> -->
 
 			
-			<Overlay opacity={1} {active} color={theme === 'dark' ? 'grey darken-4' : 'grey lighten-3'}>
+			<Overlay opacity={1} {active} color={theme === 'dark' ? 'grey darken-4' : 'grey lighten-5'}>
 
 				{#if overlayMode === 'form'}
 
@@ -530,9 +532,17 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<Card style="background-color: #323232; padding: 10px; width: 650px;">
-						tetris here
-					</Card>
+					<div style="display: flex;">
+
+						<div>
+							<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">MATH WHIZ</h3>
+
+							<Card style="padding: 20px; width: 650px; background-color: {theme === 'dark' ? '#151515' : 'grey lighten-5'};">
+								<MathWhiz/>
+							</Card>
+						</div>
+
+					</div>
 
 				{:else if overlayMode === "flappy"}
 
@@ -657,7 +667,7 @@
 
 					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="green-text text-lighten-2">BREAKOUT</h3>
 
-					<Card style="background-color: #323232; padding: 10px; width: 650px;">
+					<Card style="padding: 10px; width: 650px;">
 						<Breakout/>
 					</Card>
 

@@ -16,9 +16,9 @@
     let birdY = 200;
     // Pipe Info
     const pipeWidth = 50;
-    let pipeX = 200;
+    let pipeX = 500;
     const pipeGap = 200;
-    let topPipeBottomY = 30;
+    let topPipeBottomY = 200;
     // Score info
     let score = 0;
     let bestScore = 0;
@@ -69,10 +69,14 @@
     }
     function handleClick() {
       birdDy = 9;
+      bird.src = "/assets/duck-up.svg";
+      setTimeout(() => {bird.src = "/assets/duck.svg"}, 200);
     }
     function keydown(event) {
         if(event.keyCode == 32){
             birdDy = 9;
+            bird.src = "/assets/duck-up.svg";
+            setTimeout(() => {bird.src = "/assets/duck.svg"}, 200);
         }
     }
   </script>

@@ -1,7 +1,5 @@
 <script>
 
-    import { Button } from 'svelte-materialify';
-
 </script>
 
 <div class="headline">
