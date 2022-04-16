@@ -1,7 +1,10 @@
 <svelte:options accessors/>
 
 <script>
-  	import {Button, TextField, ProgressLinear } from 'svelte-materialify';
+  	import {Button, TextField, Icon } from 'svelte-materialify';
+    import { MATH_HIGHSCORES } from './snakeconstants';
+    import { mdiReplay } from '@mdi/js';
+
     import { tweened } from 'svelte/motion';
     let original = 3 * 60; // TYPE NUMBER OF SECONDS HERE
     let timer = tweened(original)
@@ -16,18 +19,13 @@
 
     $: minutes = Math.floor($timer / 60);
     $: seconds = zeroPadded(Math.floor($timer - minutes * 60))
-
-    console.log(seconds)
     
-    let mode = 'unstarted';
-
     let score = 0;
+    let bestScore;
 
     let input;
 
     var animation;
-
-    let inputField;
 
     const numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -36,26 +34,54 @@
 
     var answer = num1 * num2;
 
-    
+
 
     function checkAnswer() {
-      if (parseInt(input) === answer) {
-        score = score + 1;
-        num1 = numberArray[Math.floor(Math.random()*numberArray.length)];
-        num2 = numberArray[Math.floor(Math.random()*numberArray.length)];
-        answer = num1 * num2;
-        input = '';
-      } else {
-        animation = "shake-horizontal shake-constant";
-        setTimeout(() => {animation = "null"}, 500);
-        input = '';
+      if (minutes > 0 || seconds > 0) {
+        if (parseInt(input) === answer) {
+          score = score + 1;
+          bestScore = bestScore < score ? score : bestScore;
+          num1 = numberArray[Math.floor(Math.random()*numberArray.length)];
+          num2 = numberArray[Math.floor(Math.random()*numberArray.length)];
+          answer = num1 * num2;
+          input = '';
+        } else {
+          animation = "shake-horizontal shake-constant";
+          setTimeout(() => {animation = "null"}, 500);
+          input = '';
+        }
       }
+      
+    }
+    function newGame() {
+      score = 0;
+      num1 = numberArray[Math.floor(Math.random()*numberArray.length)];
+      num2 = numberArray[Math.floor(Math.random()*numberArray.length)];
+      original = 3*60;
+      timer = tweened(original);
+      setInterval();
+      minutes = Math.floor($timer / 60);
+      seconds = zeroPadded(Math.floor($timer - minutes * 60))
+    }
+
+    try {
+      bestScore = JSON.parse(localStorage.getItem(MATH_HIGHSCORES)) || [0];
+    } catch (err) {
+      bestScore = [0];
+    }
+
+    $: try {
+      localStorage.setItem(MATH_HIGHSCORES, JSON.stringify(bestScore));
+    } catch (err) {
+      noop
     }
 
     function keypress(event) {
-      if(event.keyCode == 13){
+      if (minutes > 0 || seconds > 0) {
+        if(event.keyCode == 13){
             checkAnswer()
         }
+      }
     }
 
 </script>
@@ -74,16 +100,25 @@
 
   <progress value={$timer/original} style="width: 100%;"></progress> 
   <div class="top-text" style="display: flex; justify-content: space-between;">
-    <p style="font-weight: bold; padding: 10px; margin-bottom: 5%;">Score: {score}</p>
-    <p style="font-weight: bold; padding: 10px; margin-bottom: 5%;">{minutes}:{seconds}</p>
+    <div>
+        <p style="font-weight: bold; padding-top: 0px; padding-left: 0px; margin-bottom: 5%;">Score: {score}</p>
+        <p style="font-weight: bold; padding-left: 0px; margin-bottom: 5%;">High Score: {bestScore}</p>
+    </div>
+    <p style="font-weight: bold; padding: 0px; margin-bottom: 5%;">{minutes}:{seconds}</p>
   </div>
   <h1 id="question" class="{animation}" style="text-align: center; margin-bottom: 10%; font-weight: light;">{num1} × {num2}</h1>
-  <TextField outlined type="number"  class="blue-text text-lighten-2" bind:value={input}>Your Answer</TextField>
+  <TextField outlined type="number" autofocus="autofocus" onfocus="this.select()" class="blue-text text-lighten-2" bind:value={input}>Your Answer</TextField>
 
-{#if minutes >= 0 || seconds >= 0}
-  <Button block class="green lighten-2" on:click={checkAnswer} on:keypress={keypress}>submit</Button>
+{#if minutes > 0 || seconds > 0}
+  <Button block class="red" on:click={checkAnswer} on:keypress={keypress}>submit</Button>
 {:else if minutes == 0 && seconds == 0}
-  <Button disabled block class="green lighten-2" on:click={checkAnswer} on:keypress={keypress}>submit</Button>
+  <Button block disabled>submit</Button>
+  <Button block on:click={newGame}>
+    <Icon path={mdiReplay} style="margin-right: 5px;" />
+    Play again</Button>
+  <!-- <Button block class="blue lighten-2" on:click={newGame} on:keypress={keypress}>
+    <Icon path={mdiReplay} style="margin-right: 5px;" />
+    play again</Button> -->
 {/if}
 <!-- {/if} -->
 
@@ -91,12 +126,12 @@
 
   progress[value]::-webkit-progress-value {
     height: 10px;
-    background-color: #64b5f6;
+    background-color: #f44336;
     border-radius: 100em;
   }
   progress[value]::-webkit-progress-bar {
     height: 10px;
-    background-color: #64b4f63c;
+    background-color: #f443363f;
     border-radius: 100em;
   }
 

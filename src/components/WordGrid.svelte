@@ -100,7 +100,7 @@
         font-size: xx-large;
         color: white;
         text-transform: uppercase;
-        background-color: rgb(24, 24, 24);
+        background-color: #b488ff3e;
         border-radius: 5px;
     }
 </style>

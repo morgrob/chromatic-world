@@ -1,9 +1,18 @@
 <script>
+    import {SLIDER_HIGHSCORES} from './snakeconstants';
+    import { mdiReplay } from '@mdi/js';
     import { shuffle } from 'lodash-es'
     import { flip } from 'svelte/animate'
-    import { Button } from 'svelte-materialify';
+    import { Button, Icon } from 'svelte-materialify';
 
     let sliderScore = 0;
+    let bestScore = 0;
+
+    try {
+		bestScore = JSON.parse(localStorage.getItem(SLIDER_HIGHSCORES)) || [0];
+	} catch (err) {
+		bestScore = [0];
+	}
 
     let solution = '123456780'
     let tiles = getShuffledTiles()
@@ -55,7 +64,14 @@
             tiles[tileCell] = 0
             tiles = [...tiles]
             sliderScore = sliderScore + 1;
+
+            if (tiles.join('') === solution) {
+                bestScore = (bestScore === 0 || bestScore > sliderScore) ? sliderScore : bestScore
+            }
+
+            return sliderScore;
         }
+        console.log(sliderScore);
     }
 
     function moveOnKeyDown ({ key }) {
@@ -77,6 +93,17 @@
     function playAgain () {
         shouldAnimate = false
         tiles = getShuffledTiles()
+
+        console.log(bestScore, sliderScore)
+        bestScore = (bestScore[0] === 0 || bestScore > sliderScore) ? sliderScore : bestScore;
+
+        sliderScore=0;
+    }
+
+    $: try {
+      localStorage.setItem(SLIDER_HIGHSCORES, JSON.stringify(bestScore));
+    } catch (err) {
+      noop
     }
 
 </script>
@@ -84,7 +111,11 @@
 <svelte:window on:keydown={moveOnKeyDown}/>
 
 <section>
-    <p><b>Moves: {sliderScore}</b></p>
+    <div style="display: flex; justify-content: space-between; width: 100%;">
+         <p><b>Moves: {sliderScore}</b></p>
+         <p><b>Best score: {bestScore}</b></p>
+    </div>
+   
     <div class="puzzle">
         {#each tiles as tile, index (tile)}
             <div class="tile"
@@ -96,7 +127,9 @@
     </div>
 
     {#if solved}
-        <Button on:click={playAgain} style="margin: 25px;">Play again</Button>
+        <Button on:click={playAgain} style="margin: 25px; background-color: #d4b54e;">
+            <Icon path={mdiReplay} style="margin-right: 5px;" />
+            Play again</Button>
     {/if}
 </section>
 
@@ -105,11 +138,6 @@
         display: flex;
         align-items: center;
         flex-direction: column;
-    }
-
-    p, b {
-        text-align: right !important;
-        width: 100%;
     }
     .puzzle {
         display: grid;

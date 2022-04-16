@@ -9,6 +9,7 @@ import {BOARD_SIZE, DOWN, EMPTY_CELL, FOOD_CELL, HIGH_SCORES, LEFT, RIGHT, SNEK_
 	let board;
 	let headPosition;
 	let snek;
+	let bestScore;
 
 	try {
 		highScores = JSON.parse(localStorage.getItem(HIGH_SCORES)) || [0];
@@ -37,6 +38,7 @@ import {BOARD_SIZE, DOWN, EMPTY_CELL, FOOD_CELL, HIGH_SCORES, LEFT, RIGHT, SNEK_
 	function eatFood(position) {
 		const [x, y] = position;
 		score += 1;
+		bestScore = bestScore < score ? score : bestScore;
 		headPosition = position;
 		board[x][y] = SNEK_CELL;
 		snek.push([x, y]);
@@ -127,7 +129,7 @@ import {BOARD_SIZE, DOWN, EMPTY_CELL, FOOD_CELL, HIGH_SCORES, LEFT, RIGHT, SNEK_
 
 	newGame();
 
-	$: highScore = Math.max(...highScores);
+	$: bestScore = Math.max(...highScores);
 
 	$: try {
 		localStorage.setItem(HIGH_SCORES, JSON.stringify(highScores));
@@ -144,7 +146,7 @@ import {BOARD_SIZE, DOWN, EMPTY_CELL, FOOD_CELL, HIGH_SCORES, LEFT, RIGHT, SNEK_
 		</div>
 		<div class="score high-score">
 			High Score:
-			{highScore}
+			{bestScore}
 		</div>
 	</div>
 
@@ -182,23 +184,18 @@ import {BOARD_SIZE, DOWN, EMPTY_CELL, FOOD_CELL, HIGH_SCORES, LEFT, RIGHT, SNEK_
 		flex-direction: column;
 	}
 	.header-container {
-		width: var(--size);
+		width: 100%;
 		display: inline-flex;
 		justify-content: space-between;
 		margin-bottom: 10px;
 	}
 	.score {
-		width: 200px;
+		font-weight: bold;
 		display: flex;
-		justify-content: center;
 		align-items: center;
 		flex-direction: row;
 	}
-	.high-score {
-		color: red;
-	}
 	.game-container {
-		padding: 5px;
 		margin: 5px;
 	}
 	.grid-container {

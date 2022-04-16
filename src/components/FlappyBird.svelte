@@ -1,4 +1,7 @@
 <script>
+
+  import { FLAPPY_HIGHSCORES } from './snakeconstants';
+
     import { onMount } from "svelte";
     const interval = 24;
     const canvasSize = 700;
@@ -37,11 +40,18 @@
         context.fillStyle = "black";
         context.fillText(score++, 9, 25);
         bestScore = bestScore < score ? score : bestScore;
-        context.fillText(`Best: ${bestScore}`, 9, 50);
+        context.fillText(`High score: ${bestScore}`, 9, 50);
         // Game over
         gameOver() && reset();
       }, interval);
     });
+
+    try {
+      bestScore = JSON.parse(localStorage.getItem(FLAPPY_HIGHSCORES)) || [0];
+    } catch (err) {
+      bestScore = [0];
+    }
+
     function gameOver() {
       const touchingPipe =
         (birdY < topPipeBottomY || birdY > topPipeBottomY + pipeGap) &&
@@ -79,12 +89,22 @@
             setTimeout(() => {bird.src = "/assets/duck.svg"}, 200);
         }
     }
+
+    // $: bestScore = Math.max(...bestScore);
+
+    $: try {
+      localStorage.setItem(FLAPPY_HIGHSCORES, JSON.stringify(bestScore));
+    } catch (err) {
+      noop
+    }
   </script>
 
  <svelte:window on:keypress={keydown}/>
   
   <style>
-    
+    canvas {
+      border-radius: 5px;
+    }
   </style>
   
   <canvas id="game" width="700" height="700" on:keydown={keydown} on:click={handleClick}/>

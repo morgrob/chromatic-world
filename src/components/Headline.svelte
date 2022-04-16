@@ -39,6 +39,43 @@
     h2 {
         font-size: 2em;
     }
+    .headline {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 50px;
+    }
+    @media screen and (max-width: 1024px){
+		h1 {
+            font-size: 2.7em;
+            text-align: center;
+            margin: -20px;
+        }
+        b {
+            font-size: 1.8em;
+            text-align: center;
+            padding: 5px;
+            font-family: learning-curve, sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: -webkit-linear-gradient(left, #DF5353, #E69256, #E9D069, #98C586, #81B3F3, #A687FC, #E37FA8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            font-size: 1.7em;
+            text-align: center;
+            padding: none;
+            margin: -10px;
+        }
+        .headline {
+            height: 22vh;
+            margin-top: 10vh;
+            margin: none;
+        }
+	}
     /* .button {
         width: 190px;
         padding: 10px 0;
@@ -89,11 +126,4 @@
     .button:hover:before {
         width: 100%;
     } */
-    .headline {
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding-left: 50px;
-    }
 </style>

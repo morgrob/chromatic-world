@@ -1,6 +1,7 @@
 <script>
 	// Import the functions you need from the SDKs you need
 	import { initializeApp } from "firebase/app";
+	import { WORLDLE_BANK } from "./components/snakeconstants";
 	// import { getAnalytics } from "firebase/analytics";
 	import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 
@@ -40,7 +41,7 @@
 	import Headline from "./components/Headline.svelte";
 
 	import { Menu, List, ListItem, TextField, Icon, Button, Overlay, MaterialApp, Card } from 'svelte-materialify';
-	import { mdiInvertColors, mdiAccountCircle, mdiLock, mdiEyeOff, mdiEye, mdiAt, mdiLogout, mdiClose, mdiReplay } from '@mdi/js';
+	import { mdiInvertColors, mdiAccountCircle, mdiLock, mdiEyeOff, mdiEye, mdiAt, mdiLogout, mdiClose, mdiReplay, mdiCalculatorVariant } from '@mdi/js';
 
 	export let theme = 'dark';
 
@@ -79,7 +80,7 @@
 		(v) => !!v || 'Required',
     	(v) => v.length <= 25 || 'Max 25 characters.',
     	(v) => {
-			const pattern = /^[a-zA-Z\-]+$/
+			const pattern = /^[a-zA-Z\-0-9_]+$/
       		return pattern.test(v) || 'Invalid username.';
     	},
 	];
@@ -203,6 +204,8 @@
 	window["keycolor"] = []
 	let message = ""
 
+	let keycolors = {}
+
 	function makeGuessColors() {
 		let result = [];
 
@@ -257,11 +260,11 @@
 		}
 	}
 
-	var randomWord = ['abroad', 'across', 'breeze', 'energy', 'motion']
+	// var randomWord = ['abroad', 'across', 'breeze', 'energy', 'motion']
 
 	onMount(() => {
 		if(word == ""){
-			word = randomWord[Math.floor(Math.random()*randomWord.length)]
+			word = WORLDLE_BANK[Math.floor(Math.random()*WORLDLE_BANK.length)]
 			console.log(word)
 			tries = 7
 			state = 0
@@ -270,13 +273,13 @@
 	})
 
 	function refreshSwordle() {
-		word = randomWord[Math.floor(Math.random()*randomWord.length)]
-		console.log(word)
+		word = WORLDLE_BANK[Math.floor(Math.random()*WORLDLE_BANK.length)]
 		tries = 7
 		state = 0
 		results = []
 		guesses = makeGuesses();
 		guessColors = makeGuessColors();
+		keycolors = {}
 	}
 
 	/////////////////////////////////////////////////////// START BATTLESHIP CODE HERE ///////////////////////////////////////////////////////
@@ -421,17 +424,17 @@
 
 				<div class="game-container">
 					<div class="row row-1">
-						<Button rounded class="red accent-2 game tetris" on:click={() => { setOverlayMode('tetris') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">MATH WHIZ</Button>
-						<Button rounded class="game flappy" on:click={() => { setOverlayMode('flappy') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #FF9452; font-size: 14pt;">Flappy Duck</Button>
+						<Button rounded class="red accent-2 game math white-text" on:click={() => { setOverlayMode('math') }} style="height: 200px; width: 200px; margin: 0 8px; font-size: 14pt;">MATH WHIZ</Button>
+						<Button rounded class="game flappy white-text" on:click={() => { setOverlayMode('flappy') }} style="height: 200px; width: 200px; margin: 0 8px; background-color: #FF9452; font-size: 14pt;">Flappy Duck</Button>
 					</div>
 					<div class="row row-2">
-						<Button rounded class="game swordle deep-purple accent-1" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">Wordle6</Button>
-						<Button rounded class="game snake pink accent-1" on:click={() => { setOverlayMode('snake') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">HUNGRY SNAKE</Button>
-						<Button rounded class="game slider" on:click={() => { setOverlayMode('slider') }} style="height: 200px; width: 200px; margin: 0 10px; background-color: #f3d161; font-size: 14pt;">SLIDER PUZZLE</Button>
+						<Button rounded class="game swordle deep-purple accent-1 white-text" on:click={() => { setOverlayMode('swordle') }} style="height: 200px; width: 200px; margin: 0 8px; font-size: 14pt;">swordle</Button>
+						<Button rounded class="game snake pink accent-1 white-text" on:click={() => { setOverlayMode('snake') }} style="height: 200px; width: 200px; margin: 0 8px; font-size: 14pt;">HUNGRY SNAKE</Button>
+						<Button rounded class="game slider white-text" on:click={() => { setOverlayMode('slider') }} style="height: 200px; width: 200px; margin: 0 8px; background-color: #f3d161; font-size: 14pt;">SLIDER PUZZLE</Button>
 					</div>
 					<div class="row row-3">
-						<Button rounded class="blue lighten-2 game battle" on:click={() => { setOverlayMode('battle') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BATTLESHIP</Button>
-						<Button rounded class="green lighten-2 game breakout" on:click={() => { setOverlayMode('breakout') }} style="height: 200px; width: 200px; margin: 0 10px; font-size: 14pt;">BREAKOUT</Button>
+						<Button rounded class="blue lighten-2 game battle white-text" on:click={() => { setOverlayMode('battle') }} style="height: 200px; width: 200px; margin: 0 8px; font-size: 14pt;">BATTLESHIP</Button>
+						<Button rounded class="green lighten-2 game breakout white-text" on:click={() => { setOverlayMode('breakout') }} style="height: 200px; width: 200px; margin: 0 8px; font-size: 14pt;">BREAKOUT</Button>
 					</div>
 				</div>
 
@@ -526,7 +529,7 @@
 						{/if}
 					</form>
 
-				{:else if overlayMode === "tetris"}
+				{:else if overlayMode === "math"}
 
 					<Button text on:click={() => { setOverlayMode(null) }} class="grey-text text-darken-2">
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
@@ -534,10 +537,12 @@
 
 					<div style="display: flex;">
 
-						<div>
-							<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">MATH WHIZ</h3>
+						<div id="math">
+							<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">MATH WHIZ</h3> -->
+							<!-- <h3 style="text-align: center; margin-bottom: 25px;">🧮 MATH WHIZ 🧮</h3> -->
+							<h3 style="text-align: center; margin-bottom: 25px;">MATH WHIZ</h3>
 
-							<Card style="padding: 20px; width: 650px; background-color: {theme === 'dark' ? '#151515' : 'grey lighten-5'};">
+							<Card style="padding: 20px; width: 100%; background-color: {theme === 'dark' ? '#151515' : 'grey lighten-5'};">
 								<MathWhiz/>
 							</Card>
 						</div>
@@ -550,7 +555,9 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #FF9452;">FLAPPY DUCK</h3>
+					<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #FF9452;">FLAPPY DUCK</h3> -->
+					<!-- <h3 style="text-align: center; margin-bottom: 25px;">🪶 FLAPPY DUCK 🪶</h3> -->
+					<h3 style="text-align: center; margin-bottom: 25px;">FLAPPY DUCK</h3>
 
 					<div class="flappy-container">
 						<FlappyBird/>
@@ -562,7 +569,10 @@
 							<Icon path={mdiClose} style="margin-right: 5px;" /> close
 						</Button>
 
-						<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="deep-purple-text text-accent-1">WORDLE6</h3>
+						<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="deep-purple-text text-accent-1">WORDLE6</h3> -->
+						<!-- <h3 style="text-align: center; margin-bottom: 25px;">💡 SWORDLE 💡</h3> -->
+						<h3 style="text-align: center; margin-bottom: 25px;">SWORDLE</h3>
+
 					
 						<div class="message" style="display: flex; justify-content: space-between;">
 							{#if message != ""}
@@ -571,7 +581,7 @@
 
 							{#if state == "win"}
 								<strong>You won! 🎉</strong>
-								<Button class="deep-purple darken-3" on:click={refreshSwordle}>
+								<Button class="deep-purple accent-1" on:click={refreshSwordle}>
 									<Icon path={mdiReplay} style="margin-right: 5px;" />
 									Play Again
 								</Button>
@@ -593,7 +603,7 @@
 							{/each}
 						</table>
 
-						<Keyboard on:keyclick={handleKeyclick} />
+						<Keyboard on:keyclick={handleKeyclick} keycolors={keycolors}/>
 
 				{:else if overlayMode === "snake"}
 
@@ -601,7 +611,9 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="pink-text text-accent-1">HUNGRY SNAKE</h3>
+					<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="pink-text text-accent-1">HUNGRY SNAKE</h3> -->
+					<!-- <h3 style="text-align: center; margin-bottom: 25px;">🧀  HUNGRY SNAKE  🐍</h3> -->
+					<h3 style="text-align: center; margin-bottom: 25px;">HUNGRY SNAKE</h3>
 
 					<Snake/>
 
@@ -611,7 +623,9 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #f3d161">SLIDER PUZZLE</h3>
+					<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px; color: #f3d161">SLIDER PUZZLE</h3> -->
+					<!-- <h3 style="text-align: center; margin-bottom: 25px;">🧩 SLIDER PUZZLE 🧩</h3> -->
+					<h3 style="text-align: center; margin-bottom: 25px;">SLIDER PUZZLE</h3>
 
 					<Slider/>
 
@@ -621,7 +635,9 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<h3 class="blue-text text-lighten-2" style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">BATTLESHIP</h3>
+					<!-- <h3 class="blue-text text-lighten-2" style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;">BATTLESHIP</h3> -->
+					<!-- <h3 style="text-align: center; margin-bottom: 25px;">⚓ BATTLESHIP ⚓</h3> -->
+					<h3 style="text-align: center; margin-bottom: 25px;">BATTLESHIP</h3>
 
 					<div id="game-container">
 						<BSGrid
@@ -665,11 +681,14 @@
 						<Icon path={mdiClose} style="margin-right: 5px;" /> close
 					</Button>
 
-					<h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="green-text text-lighten-2">BREAKOUT</h3>
+					<!-- <h3 style="text-align: center; letter-spacing: 8px; margin-bottom: 25px;" class="green-text text-lighten-2">BREAKOUT</h3> -->
+					<!-- <h3 style="text-align: center; margin-bottom: 25px;">👾 BREAKOUT 👾</h3> -->
+					<h3 style="text-align: center; margin-bottom: 25px;">BREAKOUT</h3>
 
-					<Card style="padding: 10px; width: 650px;">
+					<Card style="padding: 10px; width: 650px; background-color: {theme === 'dark' ? '#151515' : 'grey lighten-5'};" >
 						<Breakout/>
 					</Card>
+					<p style="text-align: center; margin: 10px; color: #757575"><i>Use the left and right arrow keys to control the paddle.</i></p>
 
 				{/if}
 
@@ -687,11 +706,15 @@
 		background-size: contain;
 		background-repeat: no-repeat;
 	}
+	#math {
+		width: 45vw;
+	}
 	.footer-items {
 		display: flex;
 	}
 	.main-container {
 		display: flex;
+		flex-direction: row;
 		justify-content: space-between;
 	}
 	b:hover {
@@ -753,6 +776,7 @@
         height: 100vh;
         justify-content: center;
 		margin-right: 3%;
+		width: 40%;
     }
     .row {
         display: flex;
@@ -795,6 +819,27 @@
     .disable {
         pointer-events: none;
     }
+
+
+	@media screen and (max-width: 1024px){
+		.main-container {
+			flex-direction: column;
+			height: auto;
+		}
+		.container {
+			background-image: url("/assets/rainbow-bg-mobile.png");
+			background-size: cover;
+			height: 100vh;
+		}
+		.game-container {
+			height: auto;
+			margin-right: 0;
+			width: 100%;
+		}
+		#math {
+			width: 94vw;
+		}
+	}
     /* .game {
         height: 225px;
         width: 225px;

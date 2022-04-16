@@ -150,7 +150,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color:rgb(46, 46, 46);
+        background-color:rgba(0, 0, 0, 0.25);
     }
     .grid-square:hover {
         border: 2px solid white;

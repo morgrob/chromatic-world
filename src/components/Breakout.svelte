@@ -1,11 +1,15 @@
 <script>
+	import { BREAKOUT_HIGHSCORES } from './snakeconstants';
 	import { onMount } from 'svelte';
 	let canvas;
 	var rightPressed = false;
 	var leftPressed = false;
-	var paddleHeight = 10;
-	var paddleWidth = 54;
+	var paddleHeight = 8;
+	var paddleWidth = 70;
 	var paddleX = 0;
+	let score = 0;
+	let bestScore = 0;
+
 	onMount(() => {
 		const ctx = canvas.getContext('2d');
 		var ballRadius = 6;
@@ -21,7 +25,7 @@
 		var brickOffsetTop = 30;
 		var brickOffsetLeft = 0;
 		var bricks = [];
-		var score = 0;
+
 		// var lives = 3;
 		paddleX = (canvas.width-paddleWidth)/2;
 		for(var c=0; c<brickColumnCount; c++) {
@@ -39,6 +43,7 @@
 							dy = -dy;
 							b.status = 0;
 							score++;
+							bestScore = bestScore < score ? score : bestScore;
 							if(score == brickRowCount*brickColumnCount) {
 								alert("YOU WIN, CONGRATS!");
 								document.location.reload();
@@ -54,9 +59,9 @@
 		// 	ctx.fillText("Lives: "+lives, canvas.width-65, 20);
 		// }
 		function drawScore() {
-			ctx.font = "16px Arial";
-			ctx.fillStyle = "#fff";
-			ctx.fillText("Score: "+score, 8, 20);
+			// ctx.font = "16px Arial";
+			// ctx.fillStyle = "#fff";
+			// ctx.fillText("Score: "+score, 8, 20);
 		}
 		function drawBricks() {
 			for(var c=0; c<brickColumnCount; c++) {
@@ -78,14 +83,14 @@
 		function drawBall() {
 			ctx.beginPath();
 			ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-			ctx.fillStyle = "#fff";
+			ctx.fillStyle = "#b388ff";
 			ctx.fill();
 			ctx.closePath();
 		}
 		function drawPaddle() {
 			ctx.beginPath();
 			ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-			ctx.fillStyle = "#91C48A";
+			ctx.fillStyle = "#555";
 			ctx.fill();
 			ctx.closePath();
 		}
@@ -119,6 +124,7 @@
 					dx = 2;
 					dy = -2;
 					paddleX = (canvas.width-paddleWidth)/2;
+					score = 0;
 					}
 				}
 			// }
@@ -134,6 +140,13 @@
 		}
 		draw();
 	});
+
+	try {
+      bestScore = JSON.parse(localStorage.getItem(BREAKOUT_HIGHSCORES)) || [0];
+    } catch (err) {
+      bestScore = [0];
+    }
+
 	function keyDownHandler(e) {
 		if(e.keyCode == 39) {
 			rightPressed = true;
@@ -151,14 +164,27 @@
 		}
 	}
 	function mouseMoveHandler(e) {
-		var relativeX = e.clientX + canvas.offsetLeft;
+		var relativeX = e.clientX - canvas.offsetLeft;
+		console.log(e.clientX, canvas.offsetLeft, relativeX)
 		if(relativeX > 0 && relativeX < canvas.width) {
-			paddleX = relativeX - paddleWidth/2;
+			paddleX = relativeX - paddleWidth / 2;
 		} 
 	}	
+	$: try {
+      localStorage.setItem(BREAKOUT_HIGHSCORES, JSON.stringify(bestScore));
+    } catch (err) {
+      noop
+    }
 </script>
 
-<svelte:window on:keydown={keyDownHandler} on:keyup={keyUpHandler} on:mousemove={mouseMoveHandler}/>
+<!-- <svelte:window on:keydown={keyDownHandler} on:keyup={keyUpHandler} on:mousemove={mouseMoveHandler}/> -->
+<svelte:window on:keydown={keyDownHandler} on:keyup={keyUpHandler}/>
+
+<div class="scores">
+	<p>Score: {score}</p>
+	<p>High Score: {bestScore}</p>
+</div>
+
 
 <canvas
 	bind:this={canvas}
@@ -168,4 +194,8 @@
 
 <style>
 	/* canvas { background: #eee; } */
+	.scores {
+		display: flex;
+		justify-content: space-between;
+	}
 </style>

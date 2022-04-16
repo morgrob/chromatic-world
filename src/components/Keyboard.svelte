@@ -15,7 +15,9 @@
             fn({key: key})
         }
     }
-    let keycolors = {}
+
+    export let keycolors
+
     function updateKeyboard(colors){
         for(let i of Object.keys(colors)){
             for(let j of colors[i]){
